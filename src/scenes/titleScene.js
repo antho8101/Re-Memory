@@ -63,6 +63,7 @@ export const titleScene = {
   },
 
   render(ctx, canvas) {
+    if (!fadeStarted) return
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
     ctx.globalAlpha = fadeOpacity
