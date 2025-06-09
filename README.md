@@ -17,27 +17,36 @@ The game explores the boundaries between dream and reality, through painterly vi
 
 ## ✨ Features
 
-- 🖱️ **Classic Point & Click** mechanics with a modern aesthetic  
-- 🎨 **PixiJS-powered rendering**, React-based architecture  
-- 🎼 **Immersive soundscapes** and evocative animations  
-- 📖 **Story-first design**, with interludes and quotes from literature  
-- 🔍 **No hand-holding** — discovery is at the heart of the experience  
+- 🖱️ **Classic Point & Click** mechanics, handcrafted in vanilla JS  
+- 🎼 **Immersive soundscapes** and evocative transitions  
+- 🪞 **Custom engine**, lightweight and tailored to the story  
+- 📖 **Story-first design**, with literary quotes and silent interludes  
+- 🔍 **No hand-holding** — discovery is everything  
+
+---
+
+## ⚙️ Engine
+
+Built from scratch in pure **JavaScript** with **Vite** as bundler.  
+No framework, no dependency: just control, elegance, and performance.
+
+We call it **RE:Core** — a custom storytelling engine designed for emotion-first gameplay.
 
 ---
 
 ## 🧪 Tech Stack
 
-- **React** & **Vite** for SPA structure  
-- **PixiJS** for custom rendering (canvas-based)  
-- **Modular Scenes** and transitions (Title → Quote → Game)  
-- **Styled Assets** in 21:9 ultrawide for cinematic impact  
+- 🧠 **Vite** for ultra-fast development  
+- 🎨 **HTML5 Canvas** for rendering  
+- 🧱 **Modular Scene System** (Title → Quote → Chapters)  
+- 📺 **Cinematic 21:9 layouts** and custom-built transitions  
 
 ---
 
 ## 🚧 Status
 
 This is a passion project currently under **active development**.  
-Expect early builds, experiments and sudden bursts of polish ✨
+Expect early builds, experiments, bugs... and sudden bursts of beauty.
 
 ---
 
@@ -50,7 +59,7 @@ Expect early builds, experiments and sudden bursts of polish ✨
 
 ## 🤍 Credits
 
-Crafted by [antho8101](https://github.com/antho8101) with love, tea, and a touch of melancholy.  
+Crafted by [@antho8101](https://github.com/antho8101) with love, tea, and a touch of melancholy.  
 Art direction, UI, code & heart by one soul — with a whisper from the machine.
 
 ---
@@ -58,4 +67,4 @@ Art direction, UI, code & heart by one soul — with a whisper from the machine.
 ## 📜 License
 
 This project is currently closed-source during its creation phase.  
-For inquiries, contact via GitHub or a letter left at midnight 🌒
+For inquiries, contact via GitHub or whisper it through a terminal at midnight 🌒
