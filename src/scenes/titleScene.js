@@ -3,6 +3,13 @@
 const hoverSound = new Audio('./src/assets/hover.wav')
 const clickSound = new Audio('./src/assets/click.wav')
 
+const glowLayers = []
+for (let i = 1; i <= 11; i++) {
+  const img = new Image()
+  img.src = `./src/assets/glow-${i}.png`
+  glowLayers.push(img)
+}
+
 const bg = new Image()
 bg.src = './src/assets/title-bg.png'
 
@@ -61,11 +68,44 @@ export const titleScene = {
     ctx.globalAlpha = fadeOpacity
 
     if (bgLoaded) {
-      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height)
+        const imgRatio = bg.width / bg.height
+const canvasRatio = canvas.width / canvas.height
+
+let drawWidth, drawHeight, offsetX, offsetY
+
+if (canvasRatio > imgRatio) {
+  // Le canvas est plus large → on ajuste en hauteur
+  drawWidth = canvas.width
+  drawHeight = canvas.width / imgRatio
+  offsetX = 0
+  offsetY = (canvas.height - drawHeight) / 2
+} else {
+  // Le canvas est plus haut → on ajuste en largeur
+  drawHeight = canvas.height
+  drawWidth = canvas.height * imgRatio
+  offsetX = (canvas.width - drawWidth) / 2
+  offsetY = 0
+}
+
+ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
     } else {
-      ctx.fillStyle = '#111'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#111'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
     }
+
+    // Dessin des glows (ratio respecté)
+    glowLayers.forEach((img, i) => {
+        if (!img.complete) return
+        const cfg = glowConfigs[i]
+        const x = canvas.width * cfg.x
+        const y = canvas.height * cfg.y
+        const desiredWidth = canvas.width * cfg.w
+        const ratio = img.height / img.width
+        const desiredHeight = desiredWidth * ratio
+        ctx.globalAlpha = cfg.alpha || 0.4
+        ctx.drawImage(img, x, y, desiredWidth, desiredHeight)
+    })
+    ctx.globalAlpha = 1
 
     const btnWidth = 220
     const btnHeight = 60
@@ -101,48 +141,43 @@ export const titleScene = {
 
     let glitchX = 0, glitchY = 0
     if (glitchTime > 0) {
-      glitchX = Math.random() * 4 - 2
-      glitchY = Math.random() * 4 - 2
-      glitchTime--
+        glitchX = Math.random() * 4 - 2
+        glitchY = Math.random() * 4 - 2
+        glitchTime--
     }
 
     ctx.save()
     ctx.translate(btnX + btnWidth / 2, btnY + btnHeight / 2)
-
-    const scale = isHover ? 1.05 : 1
+    const scale = isPressed ? 1.05 : 1
     ctx.scale(scale, scale)
 
-    // Dessin du bouton
     ctx.fillStyle = isPressed ? '#111177' : isHover ? '#3333cc' : '#222288'
     ctx.strokeStyle = '#00ffff'
     ctx.lineWidth = 2
     ctx.fillRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight)
     ctx.strokeRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight)
 
-    // Effet glitch uniquement au clic
     ctx.font = '38px VT323, monospace'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
 
     if (isPressed) {
-    ctx.fillStyle = '#ff00ff'
-    ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
-
-    ctx.fillStyle = '#00ffff'
-    ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
+        ctx.fillStyle = '#ff00ff'
+        ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
+        ctx.fillStyle = '#00ffff'
+        ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
     } else {
-    ctx.fillStyle = '#00ffff'
-    ctx.fillText('START', 0, 0)
+        ctx.fillStyle = '#00ffff'
+        ctx.fillText('START', 0, 0)
     }
 
     ctx.restore()
 
     playButton = { x: btnX, y: btnY, w: btnWidth, h: btnHeight }
 
-
-
     ctx.globalAlpha = 1
-  },
+}
+,
 
   handleMouseMove(x, y) {
     mouse.x = x
@@ -187,3 +222,17 @@ document.addEventListener('click', (e) => {
     volumeSlider.style.display = 'none'
   }
 })
+
+const glowConfigs = [
+  { x: 0.086, y: 0.51, w: 0.032 },
+  { x: 0.5, y: 0.05, w: 0.03 },
+  { x: 0.75, y: 0.15, w: 0.02 },
+  { x: 0.15, y: 0.6, w: 0.02 },
+  { x: 0.6, y: 0.4, w: 0.03 },
+  { x: 0.3, y: 0.7, w: 0.02 },
+  { x: 0.8, y: 0.65, w: 0.02 },
+  { x: 0.45, y: 0.85, w: 0.03 },
+  { x: 0.05, y: 0.85, w: 0.02 },
+  { x: 0.85, y: 0.05, w: 0.02 },
+  { x: 0.35, y: 0.3, w: 0.02 }
+]

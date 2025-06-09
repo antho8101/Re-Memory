@@ -8,7 +8,7 @@
 
 ## 🌌 About
 
-**RE:MEMORY** is a poetic, narrative-driven point & click mystery adventure.  
+**Re:Memory** is a poetic, narrative-driven point & click mystery adventure.  
 Set in a floating city where echoes of lost memories ripple through time, you follow the trail of a forgotten connection — one that may not have existed... or perhaps never ended.
 
 The game explores the boundaries between dream and reality, through painterly visuals inspired by Ghibli, a minimalist UI, and subtle emotional storytelling.
