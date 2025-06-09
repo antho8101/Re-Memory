@@ -2,7 +2,7 @@
 
 *A Point & Click experience where dreams, memories and love intertwine...*
 
-![RE:MEMORY - Title Screen](https://github.com/antho8101/Re-Memory/blob/main/public/assets/readme_banner.png?raw=true)
+![RE:MEMORY - Title Screen](https://github.com/antho8101/Re-Memory/blob/main/assets/readme_banner.png?raw=true)
 
 ---
 
@@ -52,7 +52,7 @@ Expect early builds, experiments, bugs... and sudden bursts of beauty.
 
 ## 📸 Preview
 
-> ![Early Screenshot](public/assets/preview.png)  
+> ![Early Screenshot](assets/preview.png)  
 *A first glimpse of the city where it all begins...*
 
 ---
