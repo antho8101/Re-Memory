@@ -2,7 +2,7 @@
 
 *A Point & Click experience where dreams, memories and love intertwine...*
 
-![RE:MEMORY - Title Screen](https://github.com/antho8101/Re-Memory/blob/main/src/assets/readme_banner.png?raw=true)
+![RE:MEMORY - Title Screen](https://github.com/antho8101/Re-Memory/blob/main/public/assets/readme_banner.png?raw=true)
 
 ---
 

@@ -1,19 +1,19 @@
 // titleScene.js
 
-const hoverSound = new Audio('./src/assets/hover.wav')
-const clickSound = new Audio('./src/assets/click.wav')
+const hoverSound = new Audio('./public/assets/hover.wav')
+const clickSound = new Audio('./public/assets/click.wav')
 
 const glowLayers = []
 for (let i = 1; i <= 11; i++) {
   const img = new Image()
-  img.src = `./src/assets/glow-${i}.png`
+  img.src = `./public/assets/glow-${i}.png`
   glowLayers.push(img)
 }
 
 const bg = new Image()
-bg.src = './src/assets/title-bg.png'
+bg.src = './public/assets/title-bg.png'
 
-const music = new Audio('./src/assets/title-music.mp3')
+const music = new Audio('./public/assets/title-music.mp3')
 music.loop = true
 music.volume = 0.5
 const volumeSlider = document.getElementById('volumeSlider')
