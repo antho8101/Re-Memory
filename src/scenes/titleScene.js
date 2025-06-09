@@ -1,19 +1,19 @@
 // titleScene.js
 
-const hoverSound = new Audio('./assets/hover.wav')
-const clickSound = new Audio('./assets/click.wav')
+const hoverSound = new Audio('./hover.wav')
+const clickSound = new Audio('./click.wav')
 
 const glowLayers = []
 for (let i = 1; i <= 11; i++) {
   const img = new Image()
-  img.src = `./assets/glow-${i}.png`
+  img.src = `assets/glow-${i}.png`
   glowLayers.push(img)
 }
 
 const bg = new Image()
-bg.src = './assets/title-bg.png'
+bg.src = 'assets/title-bg.png'
 
-const music = new Audio('./assets/title-music.mp3')
+const music = new Audio('assets/title-music.mp3')
 music.loop = true
 music.volume = 0.5
 const volumeSlider = document.getElementById('volumeSlider')
@@ -64,37 +64,37 @@ export const titleScene = {
 
   render(ctx, canvas) {
     if (!fadeStarted) return
+
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    ctx.globalAlpha = fadeOpacity
-
+    // Dessin du fond
     if (bgLoaded) {
         const imgRatio = bg.width / bg.height
-const canvasRatio = canvas.width / canvas.height
+        const canvasRatio = canvas.width / canvas.height
+        let drawWidth, drawHeight, offsetX, offsetY
 
-let drawWidth, drawHeight, offsetX, offsetY
+        if (canvasRatio > imgRatio) {
+        drawWidth = canvas.width
+        drawHeight = canvas.width / imgRatio
+        offsetX = 0
+        offsetY = (canvas.height - drawHeight) / 2
+        } else {
+        drawHeight = canvas.height
+        drawWidth = canvas.height * imgRatio
+        offsetX = (canvas.width - drawWidth) / 2
+        offsetY = 0
+        }
 
-if (canvasRatio > imgRatio) {
-  // Le canvas est plus large → on ajuste en hauteur
-  drawWidth = canvas.width
-  drawHeight = canvas.width / imgRatio
-  offsetX = 0
-  offsetY = (canvas.height - drawHeight) / 2
-} else {
-  // Le canvas est plus haut → on ajuste en largeur
-  drawHeight = canvas.height
-  drawWidth = canvas.height * imgRatio
-  offsetX = (canvas.width - drawWidth) / 2
-  offsetY = 0
-}
-
-ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
+        ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
     } else {
         ctx.fillStyle = '#111'
         ctx.fillRect(0, 0, canvas.width, canvas.height)
     }
 
-    // Dessin des glows (ratio respecté)
+    // Appliquer l'opacité globale
+    ctx.globalAlpha = fadeOpacity
+
+    // Glows
     glowLayers.forEach((img, i) => {
         if (!img.complete) return
         const cfg = glowConfigs[i]
@@ -103,11 +103,14 @@ ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
         const desiredWidth = canvas.width * cfg.w
         const ratio = img.height / img.width
         const desiredHeight = desiredWidth * ratio
-        ctx.globalAlpha = cfg.alpha || 0.4
+        ctx.globalAlpha = (cfg.alpha || 0.4) * fadeOpacity
         ctx.drawImage(img, x, y, desiredWidth, desiredHeight)
     })
-    ctx.globalAlpha = 1
 
+    // Revenir à opacité globale pour le texte et les boutons
+    ctx.globalAlpha = fadeOpacity
+
+    // Titre
     const btnWidth = 220
     const btnHeight = 60
     const totalHeight = 64 + 20 + 40 + 40
@@ -135,6 +138,7 @@ ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
     ctx.font = '20px Arial'
     ctx.fillText('It was never just a dream', canvas.width / 2, centerY + 40)
 
+    // Bouton START
     const btnX = (canvas.width - btnWidth) / 2
     const btnY = centerY + 80
     const isHover = mouse.x > btnX && mouse.x < btnX + btnWidth && mouse.y > btnY && mouse.y < btnY + btnHeight
@@ -176,9 +180,9 @@ ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
 
     playButton = { x: btnX, y: btnY, w: btnWidth, h: btnHeight }
 
+    // Reset l'opacité pour les prochains dessins (s'il y en a)
     ctx.globalAlpha = 1
-}
-,
+    },
 
   handleMouseMove(x, y) {
     mouse.x = x
