@@ -104,3 +104,11 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+#volumeIcon {
+  transition: transform 0.2s ease;
+}
+
+#volumeIcon:hover {
+  transform: scale(1.2);
+}
