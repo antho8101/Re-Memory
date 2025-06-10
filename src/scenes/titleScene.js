@@ -1,7 +1,16 @@
-// titleScene.js
+import { quoteScene } from './quoteScene.js'
 
-const hoverSound = new Audio('./hover.wav')
-const clickSound = new Audio('./click.wav')
+let isFadingOut = false
+let fadeOpacity = 1
+let fadeStarted = false
+let playButton = {}
+let mouse = { x: 0, y: 0, down: false }
+let glitchTime = 0
+let wasHovering = false
+let fadeComplete = false
+
+const hoverSound = new Audio('assets/hover.wav')
+const clickSound = new Audio('assets/click.wav')
 
 const glowLayers = []
 for (let i = 1; i <= 11; i++) {
@@ -12,10 +21,13 @@ for (let i = 1; i <= 11; i++) {
 
 const bg = new Image()
 bg.src = 'assets/title-bg.png'
+let bgLoaded = false
+bg.onload = () => (bgLoaded = true)
 
 const music = new Audio('assets/title-music.mp3')
 music.loop = true
 music.volume = 0.5
+
 const volumeSlider = document.getElementById('volumeSlider')
 const volumeIcon = document.getElementById('volumeIcon')
 
@@ -28,22 +40,13 @@ volumeIcon.addEventListener('click', (e) => {
   volumeSlider.style.display = volumeSlider.style.display === 'none' ? 'block' : 'none'
 })
 
-let bgLoaded = false
-let fadeOpacity = 0
-let fadeStarted = false
-let playButton = {}
-let mouse = { x: 0, y: 0, down: false }
-let wasHovering = false
-let glitchTime = 0
-
-bg.onload = () => {
-  bgLoaded = true
-}
-
 export const titleScene = {
   init() {
-    fadeOpacity = 0
+    fadeOpacity = 1
     fadeStarted = false
+    isFadingOut = false
+    fadeComplete = false
+
     const welcomeModal = document.getElementById('welcomeModal')
     const startButton = document.getElementById('startButton')
     welcomeModal.style.display = 'flex'
@@ -53,12 +56,48 @@ export const titleScene = {
       welcomeModal.style.display = 'none'
       fadeStarted = true
     }
+
+    mouse._clickedOnce = false
+  },
+
+  handleMouseMove(x, y) {
+    mouse.x = x
+    mouse.y = y
+  },
+
+  handleMouseDown() {
+    mouse.down = true
+    glitchTime = 5
+    clickSound.play()
+  },
+
+  handleMouseUp() {
+    const btn = playButton
+    const isInside = mouse.x > btn.x && mouse.x < btn.x + btn.w && mouse.y > btn.y && mouse.y < btn.y + btn.h
+
+    if (isInside && !mouse._clickedOnce) {
+      mouse._clickedOnce = true
+      clickSound.play()
+
+      setTimeout(() => {
+        isFadingOut = true
+      }, 500)
+    }
   },
 
   update() {
-    if (fadeStarted && fadeOpacity < 1) {
+    if (fadeStarted && fadeOpacity < 1 && !isFadingOut) {
       fadeOpacity += 0.01
       if (fadeOpacity > 1) fadeOpacity = 1
+    }
+
+    if (isFadingOut && fadeOpacity > 0) {
+      fadeOpacity -= 0.01
+      if (fadeOpacity <= 0 && !fadeComplete) {
+        fadeComplete = true
+        quoteScene.init()
+        window.currentScene = quoteScene
+      }
     }
   },
 
@@ -67,48 +106,54 @@ export const titleScene = {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    // Dessin du fond
-    if (bgLoaded) {
-        const imgRatio = bg.width / bg.height
-        const canvasRatio = canvas.width / canvas.height
-        let drawWidth, drawHeight, offsetX, offsetY
+    let drawWidth = 0, drawHeight = 0, offsetX = 0, offsetY = 0
 
-        if (canvasRatio > imgRatio) {
+    ctx.globalAlpha = fadeOpacity
+
+    if (bgLoaded) {
+      const imgRatio = bg.width / bg.height
+      const canvasRatio = canvas.width / canvas.height
+
+      if (canvasRatio > imgRatio) {
         drawWidth = canvas.width
         drawHeight = canvas.width / imgRatio
         offsetX = 0
         offsetY = (canvas.height - drawHeight) / 2
-        } else {
+      } else {
         drawHeight = canvas.height
         drawWidth = canvas.height * imgRatio
         offsetX = (canvas.width - drawWidth) / 2
         offsetY = 0
-        }
+      }
 
-        ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
+      ctx.drawImage(bg, offsetX, offsetY, drawWidth, drawHeight)
     } else {
-        ctx.fillStyle = '#111'
-        ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#111'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
     }
 
-    // Appliquer l'opacité globale
-    ctx.globalAlpha = fadeOpacity
+        glowLayers.forEach((img, i) => {
+      if (!img.complete) return
+      const cfg = glowConfigs[i]
+      const x = offsetX + cfg.x * drawWidth
+      const y = offsetY + cfg.y * drawHeight
+      const desiredWidth = cfg.w * drawWidth
+      const ratio = img.height / img.width
+      const desiredHeight = desiredWidth * ratio
 
-    // Glows
-    glowLayers.forEach((img, i) => {
-        if (!img.complete) return
-        const cfg = glowConfigs[i]
-        const x = canvas.width * cfg.x
-        const y = canvas.height * cfg.y
-        const desiredWidth = canvas.width * cfg.w
-        const ratio = img.height / img.width
-        const desiredHeight = desiredWidth * ratio
-        ctx.globalAlpha = (cfg.alpha || 0.4) * fadeOpacity
-        ctx.drawImage(img, x, y, desiredWidth, desiredHeight)
+      let alpha = 1
+      if (cfg.type === 'neon') {
+        alpha = Math.random() < 0.9 ? 1 : 0.2 + Math.random() * 0.3
+      } else if (cfg.type === 'apartment') {
+        const time = Date.now() / 1000 + i
+        alpha = 0.7 + 0.3 * Math.sin(time)
+      }
+
+      ctx.globalAlpha = alpha * fadeOpacity // ← ⬅️ Important ici
+      ctx.drawImage(img, x, y, desiredWidth, desiredHeight)
     })
 
-    // Revenir à opacité globale pour le texte et les boutons
-    ctx.globalAlpha = fadeOpacity
+    ctx.globalAlpha = fadeOpacity // ← ⬅️ Repositionne ici avant le texte et bouton  
 
     // Titre
     const btnWidth = 220
@@ -127,16 +172,17 @@ export const titleScene = {
     const startX = canvas.width / 2 - totalWidth / 2
 
     ctx.fillStyle = 'white'
-    ctx.fillText(prefix, startX + prefixWidth / 2, centerY)
+    ctx.fillText(prefix, Math.round(startX + prefixWidth / 2), Math.round(centerY))
 
     ctx.fillStyle = 'red'
-    ctx.fillText(':', startX + ctx.measureText('Re').width + ctx.measureText(':').width / 2, centerY)
+    ctx.fillText(':', Math.round(startX + ctx.measureText('Re').width + ctx.measureText(':').width / 2), Math.round(centerY))
 
     ctx.fillStyle = 'white'
-    ctx.fillText(suffix, startX + prefixWidth + ctx.measureText(suffix).width / 2, centerY)
+    ctx.fillText(suffix, Math.round(startX + prefixWidth + ctx.measureText(suffix).width / 2), Math.round(centerY))
 
     ctx.font = '20px Arial'
-    ctx.fillText('It was never just a dream', canvas.width / 2, centerY + 40)
+    ctx.fillText('It was never just a dream', Math.round(canvas.width / 2), Math.round(centerY + 40))
+
 
     // Bouton START
     const btnX = (canvas.width - btnWidth) / 2
@@ -144,17 +190,12 @@ export const titleScene = {
     const isHover = mouse.x > btnX && mouse.x < btnX + btnWidth && mouse.y > btnY && mouse.y < btnY + btnHeight
     const isPressed = isHover && mouse.down
 
-    let glitchX = 0, glitchY = 0
-    if (glitchTime > 0) {
-        glitchX = Math.random() * 4 - 2
-        glitchY = Math.random() * 4 - 2
-        glitchTime--
-    }
+    if (isHover && !wasHovering) hoverSound.play()
+    wasHovering = isHover
 
     ctx.save()
     ctx.translate(btnX + btnWidth / 2, btnY + btnHeight / 2)
-    const scale = isPressed ? 1.05 : 1
-    ctx.scale(scale, scale)
+    ctx.scale(isPressed ? 1.05 : 1, isPressed ? 1.05 : 1)
 
     ctx.fillStyle = isPressed ? '#111177' : isHover ? '#3333cc' : '#222288'
     ctx.strokeStyle = '#00ffff'
@@ -167,77 +208,37 @@ export const titleScene = {
     ctx.textBaseline = 'middle'
 
     if (isPressed) {
-        ctx.fillStyle = '#ff00ff'
-        ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
-        ctx.fillStyle = '#00ffff'
-        ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
+      ctx.fillStyle = '#ff00ff'
+      ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
+      ctx.fillStyle = '#00ffff'
+      ctx.fillText('START', Math.random() * 2 - 1, Math.random() * 2 - 1)
     } else {
-        ctx.fillStyle = '#00ffff'
-        ctx.fillText('START', 0, 0)
+      ctx.fillStyle = '#00ffff'
+      ctx.fillText('START', 0, 0)
     }
 
     ctx.restore()
+    ctx.globalAlpha = 1
 
     playButton = { x: btnX, y: btnY, w: btnWidth, h: btnHeight }
-
-    // Reset l'opacité pour les prochains dessins (s'il y en a)
-    ctx.globalAlpha = 1
-    },
-
-  handleMouseMove(x, y) {
-    mouse.x = x
-    mouse.y = y
-
-    const b = playButton
-    const isHover = x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h
-    document.body.style.cursor = isHover ? 'pointer' : 'default'
-
-    if (isHover && !wasHovering) {
-      hoverSound.currentTime = 0
-      hoverSound.play().catch(() => {})
-    }
-
-    wasHovering = isHover
-  },
-
-  handleMouseDown() {
-    mouse.down = true
-  },
-
-  handleMouseUp() {
-    mouse.down = false
-  },
-
-  handleClick(x, y) {
-    const b = playButton
-    if (x > b.x && x < b.x + b.w && y > b.y && y < b.y + b.h) {
-      clickSound.currentTime = 0
-      clickSound.play().catch(() => {})
-      glitchTime = 10
-      // ➕ plus tard ici : changer de scène
-    }
   }
 }
 
+const glowConfigs = [
+  { x: 0.086, y: 0.505, w: 0.032, type: 'neon' },
+  { x: 0.846, y: 0.72, w: 0.06, type: 'apartment' },
+  { x: 0.894, y: 0.48, w: 0.04, type: 'apartment' },
+  { x: 0.953, y: 0.28, w: 0.05, type: 'apartment' },
+  { x: 0.096, y: 0.73, w: 0.075, type: 'apartment' },
+  { x: 0.136, y: 0.88, w: 0.045, type: 'neon' },
+  { x: 0.02, y: 0.6, w: 0.05, type: 'apartment' },
+  { x: 0.155, y: 0.18, w: 0.03, type: 'neon' },
+  { x: 0.55, y: 0.09, w: 0.042, type: 'neon' },
+  { x: 0.677, y: 0.435, w: 0.03, type: 'neon' },
+  { x: 0.00, y: 0.088, w: 0.04, type: 'apartment' }
+]
+
 document.addEventListener('click', (e) => {
   const volumeControl = document.getElementById('volumeControl')
-  const isClickInside = volumeControl.contains(e.target)
-
-  if (!isClickInside) {
-    volumeSlider.style.display = 'none'
-  }
+  if (!volumeControl.contains(e.target)) volumeSlider.style.display = 'none'
 })
-
-const glowConfigs = [
-  { x: 0.086, y: 0.51, w: 0.032 },
-  { x: 0.5, y: 0.05, w: 0.03 },
-  { x: 0.75, y: 0.15, w: 0.02 },
-  { x: 0.15, y: 0.6, w: 0.02 },
-  { x: 0.6, y: 0.4, w: 0.03 },
-  { x: 0.3, y: 0.7, w: 0.02 },
-  { x: 0.8, y: 0.65, w: 0.02 },
-  { x: 0.45, y: 0.85, w: 0.03 },
-  { x: 0.05, y: 0.85, w: 0.02 },
-  { x: 0.85, y: 0.05, w: 0.02 },
-  { x: 0.35, y: 0.3, w: 0.02 }
-]
