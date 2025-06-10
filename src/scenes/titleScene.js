@@ -6,14 +6,14 @@ const clickSound = new Audio('./click.wav')
 const glowLayers = []
 for (let i = 1; i <= 11; i++) {
   const img = new Image()
-  img.src = `public/assets/glow-${i}.png`
+  img.src = `assets/glow-${i}.png`
   glowLayers.push(img)
 }
 
 const bg = new Image()
-bg.src = 'public/assets/title-bg.png'
+bg.src = 'assets/title-bg.png'
 
-const music = new Audio('public/assets/title-music.mp3')
+const music = new Audio('assets/title-music.mp3')
 music.loop = true
 music.volume = 0.5
 const volumeSlider = document.getElementById('volumeSlider')
