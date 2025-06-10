@@ -52,7 +52,7 @@ Expect early builds, experiments, bugs... and sudden bursts of beauty.
 
 ## 📸 Preview
 
-> ![Early Screenshot](assets/preview.png)  
+> ![Early Screenshot](public/assets/preview.png)  
 *A first glimpse of the city where it all begins...*
 
 ---
