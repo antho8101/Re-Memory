@@ -1,4 +1,4 @@
-import { quoteScene } from './quoteScene.js'
+import { firstCinematicScene } from './firstCinematicScene.js'
 
 let isFadingOut = false
 let fadeOpacity = 1
@@ -76,13 +76,22 @@ export const titleScene = {
     const isInside = mouse.x > btn.x && mouse.x < btn.x + btn.w && mouse.y > btn.y && mouse.y < btn.y + btn.h
 
     if (isInside && !mouse._clickedOnce) {
-      mouse._clickedOnce = true
-      clickSound.play()
+  mouse._clickedOnce = true
+  clickSound.play()
 
-      setTimeout(() => {
-        isFadingOut = true
-      }, 500)
+  // ⬇️ Lancement du fade-out musique
+  const fadeInterval = setInterval(() => {
+    music.volume = Math.max(0, music.volume - 0.01)
+    if (music.volume <= 0) {
+      music.pause()
+      clearInterval(fadeInterval)
     }
+  }, 50)
+
+  setTimeout(() => {
+    isFadingOut = true
+  }, 500)
+}
   },
 
   update() {
@@ -95,8 +104,8 @@ export const titleScene = {
       fadeOpacity -= 0.01
       if (fadeOpacity <= 0 && !fadeComplete) {
         fadeComplete = true
-        quoteScene.init()
-        window.currentScene = quoteScene
+        firstCinematicScene.init()
+        window.currentScene = firstCinematicScene
       }
     }
   },

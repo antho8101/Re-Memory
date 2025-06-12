@@ -1,5 +1,5 @@
 import { titleScene } from './scenes/titleScene.js'
-import { quoteScene } from './scenes/quoteScene.js'
+import { firstCinematicScene } from './scenes/firstCinematicScene.js'
 
 const canvas = document.getElementById('gameCanvas')
 const ctx = canvas.getContext('2d')
@@ -25,6 +25,8 @@ canvas.addEventListener('click', (e) => {
   const rect = canvas.getBoundingClientRect()
   currentScene.handleClick?.(e.clientX - rect.left, e.clientY - rect.top)
 })
+
+console.log('🔁 Loaded firstCinematicScene:', firstCinematicScene)
 
 let lastTime = performance.now()
 function gameLoop(now = performance.now()) {
