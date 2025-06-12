@@ -136,8 +136,11 @@ export const firstCinematicScene = {
         ctx.fillStyle = 'black'
         ctx.fillRect(btn.x - w / 2, btnY - h / 2, w, h)
         ctx.globalAlpha = 1
+        ctx.font = `${32 * scale}px Arial`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
         ctx.fillStyle = 'white'
-        ctx.fillText(btn.label, btn.x, btnY + 10)
+        ctx.fillText(btn.label, btn.x, btnY)
       })
     }
 
@@ -177,32 +180,36 @@ export const firstCinematicScene = {
   },
 
   async handleClick(x, y) {
-    if (!showChoices || buttonFadingOut) return
+  if (!showChoices || buttonFadingOut) return
 
-    for (const btn of choiceButtons) {
-      if (
-        x >= btn.x - btn.width / 2 &&
-        x <= btn.x + btn.width / 2 &&
-        y >= btn.baseY - btn.height / 2 &&
-        y <= btn.baseY + btn.height / 2
-      ) {
-        clickSound.play()
+  for (const btn of choiceButtons) {
+    if (
+      x >= btn.x - btn.width / 2 &&
+      x <= btn.x + btn.width / 2 &&
+      y >= btn.baseY - btn.height / 2 &&
+      y <= btn.baseY + btn.height / 2
+    ) {
+      clickSound.play()
 
-        await fadeOutButtons()
+      await fadeOutButtons()
 
-        if (btn.label.toLowerCase() === 'wake up') {
-          fadeToBlack(() => {
-            console.log('🚪 Réveil ! Scène suivante...')
-            // window.currentScene = nextScene
-            // nextScene.init()
-          })
-        } else {
-          dreamAttempts++
-          await handleDream()
-        }
+      if (btn.label.toLowerCase() === 'wake up') {
+        fadeToBlack(() => {
+          console.log('🚪 Réveil ! Scène suivante...')
+          // window.currentScene = nextScene
+          // nextScene.init()
+        })
+      } else {
+        dreamAttempts++
+        await handleDream()
       }
+
+      return // ✅ ICI : pour arrêter la boucle et éviter de jouer le son en dehors des boutons
     }
   }
+
+  // Aucun bouton cliqué → rien ne se passe (plus de son parasite)
+}
 }
 
 // ----------------

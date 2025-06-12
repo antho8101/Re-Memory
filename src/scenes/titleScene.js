@@ -68,7 +68,6 @@ export const titleScene = {
   handleMouseDown() {
     mouse.down = true
     glitchTime = 5
-    clickSound.play()
   },
 
   handleMouseUp() {
@@ -214,7 +213,7 @@ export const titleScene = {
 
     ctx.font = '38px VT323, monospace'
     ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
+    ctx.textBaseline = 'middle' // ← assure un centrage parfait
 
     if (isPressed) {
       ctx.fillStyle = '#ff00ff'
