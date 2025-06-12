@@ -190,7 +190,7 @@ export const firstCinematicScene = {
 
         await fadeOutButtons()
 
-        if (btn.label === 'Wake up') {
+        if (btn.label.toLowerCase() === 'wake up') {
           fadeToBlack(() => {
             console.log('🚪 Réveil ! Scène suivante...')
             // window.currentScene = nextScene
