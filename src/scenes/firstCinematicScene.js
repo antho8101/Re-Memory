@@ -21,7 +21,8 @@ const delay = (ms) => new Promise(res => setTimeout(res, ms))
 
 export const firstCinematicScene = {
   async init(canvas) {
-    canvasRef = canvas
+    canvasRef = canvas || document.querySelector('canvas')
+    console.log('🎨 Canvas assigné dans init:', canvasRef)  
     finished = false
     showChoices = false
     dreamAttempts = 0
@@ -58,6 +59,10 @@ export const firstCinematicScene = {
       finished = true
       console.log('🎬 Video ended')
       showChoices = true
+
+      setupButtons(canvas)
+      await delay(100)
+      fadeInButtons()
     }
 
     video.play().then(() => {
@@ -121,26 +126,33 @@ export const firstCinematicScene = {
       ctx.font = '32px Arial'
       ctx.textAlign = 'center'
 
-    if (choiceButtons.length === 0) {
-      setupButtons(canvas)
-    }
+      if (choiceButtons.length === 0 && canvas && !buttonFadingIn && !buttonFadingOut) {
+        console.log("🧪 Auto-setup buttons triggered", canvas)
+        setupButtons(canvas)
+      }
 
       choiceButtons.forEach(btn => {
-        const btnY = btn.baseY - 3 * Math.sin(performance.now() / 500)
+        const float = 3 * Math.sin(performance.now() / 500)
+        const btnY = btn.baseY - (btn.offsetY ?? 0) - float
         const isHovered = btn === lastHoveredButton
         const scale = isHovered ? 1.05 : 1
         const w = btn.width * scale
         const h = btn.height * scale
 
-        ctx.globalAlpha = buttonFadeAlpha
+        ctx.globalAlpha = (btn.opacity ?? 1) * buttonFadeAlpha
+
         ctx.fillStyle = 'black'
         ctx.fillRect(btn.x - w / 2, btnY - h / 2, w, h)
-        ctx.globalAlpha = 1
+
+        ctx.fillStyle = 'white'
         ctx.font = `${32 * scale}px Arial`
         ctx.textAlign = 'center'
         ctx.textBaseline = 'middle'
-        ctx.fillStyle = 'white'
         ctx.fillText(btn.label, btn.x, btnY)
+
+        ctx.globalAlpha = 1
+
+        console.log(`🧪 btn: ${btn.label}, opacity: ${btn.opacity}, offsetY: ${btn.offsetY}`)
       })
     }
 
@@ -201,7 +213,7 @@ export const firstCinematicScene = {
         })
       } else {
         dreamAttempts++
-        await handleDream()
+        await handleDream(canvasRef)
       }
 
       return // ✅ ICI : pour arrêter la boucle et éviter de jouer le son en dehors des boutons
@@ -216,9 +228,10 @@ export const firstCinematicScene = {
 // Fonctions internes
 // ----------------
 
-function setupButtons(canvas) {
+function setupButtons(c) {
+  const canvas = c || canvasRef
   if (!canvas) {
-    console.log("📏 setupButtons canvasRef =", canvasRef)
+    console.warn("❌ Aucun canvas trouvé pour setupButtons")
     return
   }
 
@@ -228,25 +241,32 @@ function setupButtons(canvas) {
   const totalHeight = btnHeight * 2 + spacing
   const startY = canvas.height / 2 - totalHeight / 2
 
+  buttonFadeAlpha = 0 // ← reset du fondu
   choiceButtons = [
     {
       label: 'Wake Up',
       x: cx,
       baseY: startY + btnHeight / 2,
       width: 260,
-      height: btnHeight
+      height: btnHeight,
+      offsetY: 40,     // ← animation verticale
+      opacity: 0       // ← animation alpha
     },
     {
       label: 'keep dreaming',
       x: cx,
       baseY: startY + btnHeight * 1.5 + spacing,
       width: 360,
-      height: btnHeight
+      height: btnHeight,
+      offsetY: 40,
+      opacity: 0
     }
   ]
+
+  console.log("🆕 Buttons créés :", choiceButtons)
 }
 
-async function handleDream() {
+async function handleDream(canvas) {
   let sound
   if (dreamAttempts === 1) sound = 'assets/StillDreaming.mp3'
   else if (dreamAttempts === 2) sound = 'assets/IllWait.mp3'
@@ -275,6 +295,11 @@ async function handleDream() {
       // nextScene.init()
     })
   } else {
+    choiceButtons = []
+    setupButtons(canvasRef)
+    buttonFadeAlpha = 0 // 🔥 Important pour le fondu
+    showChoices = true  // 🔥 Pour les rendre visibles à nouveau
+    await delay(100)
     await fadeInButtons()
   }
 }
@@ -303,13 +328,32 @@ function fadeToBlack(callback) {
 }
 
 function fadeInButtons() {
-  buttonFadingIn = true
-  const interval = setInterval(() => {
-    buttonFadeAlpha += 0.05
-    if (buttonFadeAlpha >= 1) {
-      buttonFadeAlpha = 1
-      clearInterval(interval)
-      buttonFadingIn = false
-    }
-  }, 16)
+  return new Promise(resolve => {
+    buttonFadingIn = true
+
+    const interval = setInterval(() => {
+      let stillAnimating = false
+
+      choiceButtons.forEach(btn => {
+        if (btn.offsetY > 0) {
+          btn.offsetY -= 1.2
+          if (btn.offsetY < 0) btn.offsetY = 0
+          stillAnimating = true
+        }
+
+        if (btn.opacity < 1) {
+          btn.opacity += 0.04
+          if (btn.opacity > 1) btn.opacity = 1
+          stillAnimating = true
+        }
+      })
+
+      if (!stillAnimating) {
+        clearInterval(interval)
+        buttonFadingIn = false
+        buttonFadeAlpha = 1
+        resolve()
+      }
+    }, 16)
+  })
 }
