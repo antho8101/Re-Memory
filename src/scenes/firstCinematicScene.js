@@ -1,8 +1,10 @@
 let video
 let finished = false
 let subtitleTrack = null
+let activeAudioCue = null
+let currentAudioCueText = ''
 
-let canvasRef = null // ← on stocke ici le canvas
+let canvasRef = null
 let showChoices = false
 let dreamAttempts = 0
 let choiceButtons = []
@@ -19,6 +21,8 @@ const clickSound = new Audio('assets/click.wav')
 
 const delay = (ms) => new Promise(res => setTimeout(res, ms))
 
+console.clear()
+
 export const firstCinematicScene = {
   async init(canvas) {
     canvasRef = canvas || document.querySelector('canvas')
@@ -30,6 +34,8 @@ export const firstCinematicScene = {
     isFading = false
     fadeCallback = null
     choiceButtons = []
+    activeAudioCue = null
+    currentAudioCueText = ''
 
     video = document.createElement('video')
     video.src = 'assets/FirstCinematic.mp4'
@@ -59,8 +65,7 @@ export const firstCinematicScene = {
       finished = true
       console.log('🎬 Video ended')
       showChoices = true
-
-      setupButtons(canvas)
+      setupButtons(canvasRef)
       await delay(100)
       fadeInButtons()
     }
@@ -72,9 +77,7 @@ export const firstCinematicScene = {
     })
   },
 
-  update() {
-    // Nothing for now
-  },
+  update() {},
 
   render(ctx, canvas) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -98,10 +101,9 @@ export const firstCinematicScene = {
 
       ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight)
 
-      // Sous-titres
       if (subtitleTrack) {
         const activeCues = subtitleTrack.activeCues
-        if (activeCues.length > 0) {
+        if (activeCues && activeCues.length > 0) {
           let text = activeCues[0].text
           let fillColor = 'white'
           if (text.includes("color='#000000'")) {
@@ -118,7 +120,6 @@ export const firstCinematicScene = {
       }
     }
 
-    // Affiche écran blanc + boutons
     if (showChoices) {
       ctx.fillStyle = 'white'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -127,7 +128,6 @@ export const firstCinematicScene = {
       ctx.textAlign = 'center'
 
       if (choiceButtons.length === 0 && canvas && !buttonFadingIn && !buttonFadingOut) {
-        console.log("🧪 Auto-setup buttons triggered", canvas)
         setupButtons(canvas)
       }
 
@@ -151,12 +151,17 @@ export const firstCinematicScene = {
         ctx.fillText(btn.label, btn.x, btnY)
 
         ctx.globalAlpha = 1
-
-        console.log(`🧪 btn: ${btn.label}, opacity: ${btn.opacity}, offsetY: ${btn.offsetY}`)
       })
+
+      if (currentAudioCueText) {
+        ctx.font = '40px Arial'
+        ctx.fillStyle = 'black'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(currentAudioCueText, canvas.width / 2, canvas.height - 40)
+      }
     }
 
-    // Fondu noir
     if (isFading) {
       fadeAlpha += 0.02
       ctx.fillStyle = `rgba(0, 0, 0, ${fadeAlpha})`
@@ -192,41 +197,33 @@ export const firstCinematicScene = {
   },
 
   async handleClick(x, y) {
-  if (!showChoices || buttonFadingOut) return
+    if (!showChoices || buttonFadingOut) return
 
-  for (const btn of choiceButtons) {
-    if (
-      x >= btn.x - btn.width / 2 &&
-      x <= btn.x + btn.width / 2 &&
-      y >= btn.baseY - btn.height / 2 &&
-      y <= btn.baseY + btn.height / 2
-    ) {
-      clickSound.play()
+    for (const btn of choiceButtons) {
+      if (
+        x >= btn.x - btn.width / 2 &&
+        x <= btn.x + btn.width / 2 &&
+        y >= btn.baseY - btn.height / 2 &&
+        y <= btn.baseY + btn.height / 2
+      ) {
+        clickSound.play()
 
-      await fadeOutButtons()
+        await fadeOutButtons()
 
-      if (btn.label.toLowerCase() === 'wake up') {
-        fadeToBlack(() => {
-          console.log('🚪 Réveil ! Scène suivante...')
-          // window.currentScene = nextScene
-          // nextScene.init()
-        })
-      } else {
-        dreamAttempts++
-        await handleDream(canvasRef)
+        if (btn.label.toLowerCase() === 'wake up') {
+          fadeToBlack(() => {
+            console.log('🚪 Réveil ! Scène suivante...')
+          })
+        } else {
+          dreamAttempts++
+          await handleDream(canvasRef)
+        }
+
+        return
       }
-
-      return // ✅ ICI : pour arrêter la boucle et éviter de jouer le son en dehors des boutons
     }
   }
-
-  // Aucun bouton cliqué → rien ne se passe (plus de son parasite)
 }
-}
-
-// ----------------
-// Fonctions internes
-// ----------------
 
 function setupButtons(c) {
   const canvas = c || canvasRef
@@ -241,7 +238,7 @@ function setupButtons(c) {
   const totalHeight = btnHeight * 2 + spacing
   const startY = canvas.height / 2 - totalHeight / 2
 
-  buttonFadeAlpha = 0 // ← reset du fondu
+  buttonFadeAlpha = 0
   choiceButtons = [
     {
       label: 'Wake Up',
@@ -249,8 +246,8 @@ function setupButtons(c) {
       baseY: startY + btnHeight / 2,
       width: 260,
       height: btnHeight,
-      offsetY: 40,     // ← animation verticale
-      opacity: 0       // ← animation alpha
+      offsetY: 40,
+      opacity: 0
     },
     {
       label: 'keep dreaming',
@@ -267,41 +264,54 @@ function setupButtons(c) {
 }
 
 async function handleDream(canvas) {
-  let sound
-  if (dreamAttempts === 1) sound = 'assets/StillDreaming.mp3'
-  else if (dreamAttempts === 2) sound = 'assets/IllWait.mp3'
-  else if (dreamAttempts === 3) sound = 'assets/Enough.mp3'
+  let sound, text
+  if (dreamAttempts === 1) {
+    sound = 'assets/StillDreaming.mp3'
+    text = 'Still dreaming, huh?'
+  } else if (dreamAttempts === 2) {
+    sound = 'assets/IllWait.mp3'
+    text = 'I’ll wait. I always do'
+  } else if (dreamAttempts === 3) {
+    sound = 'assets/Enough.mp3'
+    text = 'Okay… enough. You’re waking up now!'
+  }
 
-  // Commence par cacher les boutons
   await fadeOutButtons()
+  await delay(1000)
 
-  await delay(3000)
-
-  if (sound) {
-    const audio = new Audio(sound)
-    audio.play()
-
-    // Attendre la fin du son
-    await new Promise(resolve => {
-      audio.onended = resolve
-    })
+  if (sound && text) {
+    console.log('▶️ Playing audio:', sound)
+    currentAudioCueText = ''
+    await playAudioWithHardcodedText(sound, text)
   }
 
   if (dreamAttempts >= 3) {
     await delay(500)
     fadeToBlack(() => {
       console.log('💢 Forcé au réveil...')
-      // window.currentScene = nextScene
-      // nextScene.init()
     })
   } else {
     choiceButtons = []
     setupButtons(canvasRef)
-    buttonFadeAlpha = 0 // 🔥 Important pour le fondu
-    showChoices = true  // 🔥 Pour les rendre visibles à nouveau
+    buttonFadeAlpha = 0
+    showChoices = true
     await delay(100)
     await fadeInButtons()
   }
+}
+
+async function playAudioWithHardcodedText(audioPath, subtitleText) {
+  return new Promise(resolve => {
+    const audio = new Audio(audioPath)
+    audio.play()
+
+    currentAudioCueText = subtitleText
+
+    audio.onended = () => {
+      currentAudioCueText = ''
+      resolve()
+    }
+  })
 }
 
 function fadeOutButtons() {
@@ -319,7 +329,6 @@ function fadeOutButtons() {
     }, 16)
   })
 }
-
 
 function fadeToBlack(callback) {
   isFading = true
